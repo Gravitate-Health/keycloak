@@ -1,12 +1,12 @@
-KEYCLOAK
+Keycloak
 =================================================
-[![Build Status](https://travis-ci.org/anfederico/clairvoyant.svg?branch=master)](https://travis-ci.org/anfederico/clairvoyant)
+
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache)
 
 
 Table of contents
 -----------------
-- [KEYCLOAK](#keycloak)
+- [Keycloak](#keycloak)
   - [Table of contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Installation](#installation)
@@ -200,6 +200,7 @@ limitations under the License.
 Authors and history
 ---------------------------
 - Isabel Varona ([@isabelvato](https://github.com/isabelvato))
+- Álvaro Belmar ([@abelmarm](https://github.com/abelmarm))
 
 Acknowledgments
 ---------------------------
