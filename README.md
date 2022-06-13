@@ -11,7 +11,8 @@ Table of contents
   - [Introduction](#introduction)
   - [Installation](#installation)
     - [Requirements](#requirements)
-    - [Deployment](#deployment)
+    - [Local deployment](#local-deployment)
+    - [Kubernetes deployment](#kubernetes-deployment)
   - [Usage](#usage)
   - [Known issues and limitations](#known-issues-and-limitations)
   - [Getting help](#getting-help)
@@ -29,13 +30,13 @@ Installation
 ### Requirements
 To deploy keycloak is necessary to have installed previously JAVA 11 JRE. 
 
-### Deployment
+### Local deployment
 First of all, we need to install our server in the [Keycloak Download](https://www.keycloak.org/documentation) to set it up locally. There are different options to do it, but in this deployment it will be choose the _.zip_ format. 
 
 When the _.zip_ is downloaded, it is necessary to extract the content. We open the folder extracted and open a terminal with the following command:
 
 ```bash
- cd path/keycloak-17.0.1/keycloak-17.0.1/bin
+ cd path/keycloak-18.0.0/keycloak-18.0.0/bin
 ```
 Once this is done, we are going to start the server, to access to the keycloak interface. 
 
@@ -47,6 +48,93 @@ This command will respond with the localhost URL where is runnig our server, as 
 A **Realm** is an object that manage a set of of users, credentials, roles, and groups. A user in Keycloak belongs to only one realm and the user who logs in to Keycloak will log into that user's realm. The Master Realm contains the administrator account.
 
 ![Keycloak](./img/welcome.png)
+
+### Kubernetes deployment
+
+The Kubernetes deployment uses the public Keycloak image hosted at [quay.io](https://quay.io/repository/keycloak/keycloak). And the public Postgresql image hosted at [hub.docker](https://hub.docker.com/_/postgres), which will be used as persistence. The files for the deployment can be found at the [YAMLs](YAMLs) directory
+
+Both the deployment files for the Postgres DB and the Keycloak contain several environment variables which can be modified. These environmnet variables are the ones we used but the configuration allows for much more. Furthermore, the file [001_keycloak-secrets.yaml](YAMLs/001_keycloak-secrets.yaml) contains the values for the passwords to be used in the deployment files, you must generate your own and convert it into base64 and replace it. For example:
+
+```bash
+echo -n Mypassword1234! | base64 -w 0     # Make sure there is no trailing "\n", it will fail
+```
+
+- Postgres environment variables
+
+| Environment Variable | description                                   | default                         |
+|----------------------|-----------------------------------------------|---------------------------------|
+| POSTGRES_DB          | Database name to be created on initialization | keycloak                        |
+| POSGRES_PASSWORD     | Database password                             | \<secret>                       |
+| POSTGRES_USER        | Database user                                 | keycloak                        |
+| PGDATA               | Data location                                 | /var/lib/postgresql/data/pgdata |
+
+- Keycloak environment variables
+
+| Environment Variable    | description                                                                                                   | default                                      |
+|-------------------------|---------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| KEYCLOAK_ADMIN          | Username of the Keycloak admin user                                                                           | admin                                        |
+| KECYLOAK_ADMIN_PASSWORD | Password of the Keycloak admin user                                                                           | \<secret>                                    |
+| KC_DB_PASSWORD          | Password of the Postgres DB                                                                                   | \<secret>                                    |
+| KC_DB_USERNAME          | Username of the database user                                                                                 | keycloak                                     |
+| KC_PROXY                | Type of proxy to be used                                                                                      | edge                                         |
+| KC_DB_URL               | Full connection URL to the database                                                                           | jdbc:postgresql://keycloak-postgres/keycloak |
+| KC_HOSTNAME_STRICT      | Allow other hostnames to be used, required "false" for use with a reverse proxy without further configuration | false                                        |
+| KC_HTTP_ENABLED         | If HTTP can be used                                                                                           | true                                         |
+| KC_DB_SCHEMA            | Schema of the database                                                                                        | public                                       |
+| KC_LOG_LEVEL            | Log level                                                                                                     | debug                                        |
+
+The next step is to apply the Kubernetes files in the cluster, the services will be deployed in the development namespace. In case the namespace has not been created before you can create it with the following commands, or change the name in `metadata.namespace`:
+
+First we deploy the database:
+
+```bash
+kubectl create namespace <namespace>                         # Only if namespace not created and/or the current context
+kubectl config set-context --current --namespace=<namespace> # Only if namespace not created and/or the current context
+
+kubectl apply -f YAMLs/001_keycloak-secrets.yaml
+kubectl apply -f YAMLs/002_postgres_pvc.yaml
+kubectl apply -f YAMLs/003_postgres_service.yaml
+kubectl apply -f YAMLs/004_postgres_deployment.yaml
+```
+
+Once the database is ready the Keycloak can be deployed, you can check if the database is ready by running:
+
+```bash
+kubectl get pod | grep "keycloak-postgres"
+```
+```bash
+NAMESPACE            NAME                                         READY   STATUS    RESTARTS        AGE
+<namespace>          keycloak-postgres-6cc76fc8dc-fbtqv           1/1     Running   0               10d
+```
+
+If the status is running proceed with the Keycloak deployment:
+
+```bash
+kubectl apply -f YAMLs/005_keycloak_service.yaml
+kubectl apply -f YAMLs/006_keycloak_deployment.yaml
+```
+
+You can check if the deployment is ready by running:
+
+```bash
+kubectl get pod | grep "keycloak"
+```
+```bash
+NAMESPACE            NAME                                         READY   STATUS    RESTARTS        AGE
+<namespace>          keycloak-54d87cb874-fgfqt                    1/1     Running   0               12d
+```
+
+If the pod is ready you can access the service by other services in the same namespace by using the name of its Kubernetes service and the port (especified in [005_keycloak_service](YAMLs/005_keycloak_service)). You can also obtain both by running the following commands:
+
+```bash
+kubectl get svc | grep "keycloak"
+```
+```bash
+NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
+keycloak                   ClusterIP   10.152.183.207   <none>        8080/TCP            48d
+```
+
+The type of the service is _ClusterIP_ which means that the service can only be accessed from inside the cluster. Alternatively if the [Gateway](https://github.com/Gravitate-Health/Gateway) has been deployed, the service will be proxied to the outside of the cluster at `https://<DNS>/`.
 
 Usage
 -----

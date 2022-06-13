@@ -56,8 +56,6 @@ spec:
               key: databasepass
         - name: KC_DB_USERNAME
           value: "keycloak"
-        - name: KC_DB
-          value: "postgres"
         - name: KC_PROXY
           value: "edge"
         - name: KC_DB_URL
