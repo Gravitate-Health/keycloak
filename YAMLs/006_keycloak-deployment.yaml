@@ -1,0 +1,81 @@
+# Copyright 2022 Universidad Politécnica de Madrid
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: development
+  labels:
+    app: keycloak
+  annotations:
+    prometheus.io/scrape: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:18.0.0
+        command: ["/bin/sh", "-c"]
+        args:
+          - echo starting;
+            printenv;
+            /opt/keycloak/bin/kc.sh build --db postgres;
+            /opt/keycloak/bin/kc.sh show-config; 
+            /opt/keycloak/bin/kc.sh -v start --db-url-host=keycloak-postgres:5432 --db-url-database=keycloak --db-username=${KC_DB_USERNAME} --db-password=${KC_DB_PASSWORD};
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: "admin"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-secret
+              key: adminpass
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-secret
+              key: databasepass
+        - name: KC_DB_USERNAME
+          value: "keycloak"
+        - name: KC_DB
+          value: "postgres"
+        - name: KC_PROXY
+          value: "edge"
+        - name: KC_DB_URL
+          value: "jdbc:postgresql://keycloak-postgres/keycloak"
+        #- name: KC_DB_URL_DATABASE
+        #  value: "keycloak"
+        #- name: KC_DB_URL_HOST
+        #  value: "keycloak-postgres"
+        #- name: KC_DB_URL_PORT
+        #  value: "5432"
+        - name: KC_HOSTNAME_STRICT
+          value: "false"
+        - name: KC_HTTP_ENABLED
+          value: "true"
+        - name: KC_DB_SCHEMA
+          value: "public"
+        - name: KC_LOG_LEVEL
+          value: debug
+        ports:
+        - name: http
+          containerPort: 8080
