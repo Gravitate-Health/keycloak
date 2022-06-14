@@ -51,7 +51,7 @@ A **Realm** is an object that manage a set of of users, credentials, roles, and 
 
 ### Kubernetes deployment
 
-The Kubernetes deployment uses the public Keycloak image hosted at [quay.io](https://quay.io/repository/keycloak/keycloak). And the public Postgresql image hosted at [hub.docker](https://hub.docker.com/_/postgres), which will be used as persistence. The files for the deployment can be found at the [YAMLs](YAMLs) directory
+The Kubernetes deployment uses the public Keycloak image hosted at [quay.io](https://quay.io/repository/keycloak/keycloak). And the public Postgresql image hosted at [hub.docker](https://hub.docker.com/_/postgres), which will be used as persistence. The files for the deployment can be found at the [YAMLs](YAMLs/) directory
 
 Both the deployment files for the Postgres DB and the Keycloak contain several environment variables which can be modified. These environmnet variables are the ones we used but the configuration allows for much more. Furthermore, the file [001_keycloak-secrets.yaml](YAMLs/001_keycloak-secrets.yaml) contains the values for the passwords to be used in the deployment files, you must generate your own and convert it into base64 and replace it. For example:
 
@@ -124,7 +124,7 @@ NAMESPACE            NAME                                         READY   STATUS
 <namespace>          keycloak-54d87cb874-fgfqt                    1/1     Running   0               12d
 ```
 
-If the pod is ready you can access the service by other services in the same namespace by using the name of its Kubernetes service and the port (especified in [005_keycloak_service](YAMLs/005_keycloak_service)). You can also obtain both by running the following commands:
+If the pod is ready you can access the service by other services in the same namespace by using the name of its Kubernetes service and the port (especified in [005_keycloak_service.yaml](YAMLs/005_keycloak-service.yaml)). You can also obtain both by running the following commands:
 
 ```bash
 kubectl get svc | grep "keycloak"
@@ -134,7 +134,7 @@ NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   
 keycloak                   ClusterIP   10.152.183.207   <none>        8080/TCP            48d
 ```
 
-The type of the service is _ClusterIP_ which means that the service can only be accessed from inside the cluster. Alternatively if the [Gateway](https://github.com/Gravitate-Health/Gateway) has been deployed, the service will be proxied to the outside of the cluster at `https://<DNS>/`.
+The type of the service is _ClusterIP_ which means that the service can only be accessed from inside the cluster. Moreover, if the Kubernetes cluster has a DNS manager other services can access services in other namespaces using the following URL: ```http://<service-name>.<namespace>.svc.cluster.local```. To learn more about the types of services and its uses in Kubernetes, here is the [official documentation](https://kubernetes.io/docs/concepts/services-networking/). Alternatively if the [Gateway](https://github.com/Gravitate-Health/Gateway) has been deployed, the service will be proxied to the outside of the cluster at `https://<DNS>/`.
 
 Usage
 -----
