@@ -17,6 +17,9 @@ kind: Service
 metadata:
   name: keycloak
   namespace: development
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port:   '9090'
   labels:
     app: keycloak
 spec:
