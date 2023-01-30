@@ -14,6 +14,12 @@ Table of contents
     - [Local deployment](#local-deployment)
     - [Kubernetes deployment](#kubernetes-deployment)
   - [Usage](#usage)
+    - [Example operation](#example-operation)
+      - [**Login**](#login)
+      - [**Registration of Users**](#registration-of-users)
+      - [**Sign-Out**](#sign-out)
+      - [**Log-Out**](#log-out)
+      - [**Reset Credentials**](#reset-credentials)
   - [Known issues and limitations](#known-issues-and-limitations)
   - [Getting help](#getting-help)
   - [Contributing](#contributing)
@@ -110,8 +116,8 @@ NAMESPACE            NAME                                         READY   STATUS
 If the status is running proceed with the Keycloak deployment:
 
 ```bash
-kubectl apply -f YAMLs/005_keycloak_service.yaml
-kubectl apply -f YAMLs/006_keycloak_deployment.yaml
+kubectl apply -f YAMLs/005_keycloak-service.yaml
+kubectl apply -f YAMLs/006_keycloak-deployment.yaml
 ```
 
 You can check if the deployment is ready by running:
@@ -124,7 +130,7 @@ NAMESPACE            NAME                                         READY   STATUS
 <namespace>          keycloak-54d87cb874-fgfqt                    1/1     Running   0               12d
 ```
 
-If the pod is ready you can access the service by other services in the same namespace by using the name of its Kubernetes service and the port (especified in [005_keycloak_service.yaml](YAMLs/005_keycloak-service.yaml)). You can also obtain both by running the following commands:
+If the pod is ready you can access the service by other services in the same namespace by using the name of its Kubernetes service and the port (especified in [005_keycloak-service.yaml](YAMLs/005_keycloak-service.yaml)). You can also obtain both by running the following commands:
 
 ```bash
 kubectl get svc | grep "keycloak"
@@ -166,8 +172,147 @@ Also in the lower left side, it is a section for _Manage_ where it can be define
 
 For more information of any of these concepts go to the Acknowledgments links. 
 
+### Example operation
+Following are some examples of the requests that can be made to the Keycloak authentication API. 
+
+#### **Login**
+Making a POST request to the **token endpoint** of Keycloak. 
+
+```bash
+curl --location --request POST 'https://<url>/realms/GravitateHealth/protocol/openid-connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=GravitateHealth' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'username=myuser' \
+--data-urlencode 'password=mypassword'
+```
+This command does  the following:
+
+- Providing the **Content-Type** header as _application/x-www-form-urlencoded_.
+- Encoding the request body data as URL parameters.
+- The **grant_type** is set to password to indicate that this is a password grant request.
+- **client_id** is the credentials of the client that is trying to authenticate.
+- **username** and **password** are the credentials of the user that is trying to authenticate.
+
+When the command is successfully executed, the response will contain a JSON payload with the access token and other information, like token type and expiry time. The response should look like this:
+
+```JSON
+{
+    "access_token": "<TOKEN>",
+    "expires_in": 300,
+    "refresh_expires_in": 1800,
+    "refresh_token": "<REFRESH_TOKEN>",
+    "token_type": "Bearer",
+    "not-before-policy": 0,
+    "session_state": "48b9d271-2858-47bc-b6b8-a36e5afe9d0c",
+    "scope": "email profile"
+}
+```
+
+#### **Registration of Users**
+
+_This request requires access to a service account, which allows applications to access a set of endpoints used to manage a user's account. This action will be performed upon explicit request to WP3 or to the system administrators._
+
+Adding users to the existing list. Making a POST request to the **users endpoint** of Keycloak.
+
+```bash
+curl --location --request POST 'http://gravitate-health.lst.tfo.upm.es/admin/realms/GravitateHealth/users' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer $ACCESS_TOKEN' \
+--data-raw '{
+  "username": "jdoe",
+  "email": "jdoe@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "enabled": true,
+  "credentials": [
+    {
+      "type": "password",
+      "value": "password",
+      "temporary": false
+    }
+  ]
+}'
+```
+_In this case the JSON in the data-raw section is an example of a possible user._
+
+This command does the following:
+- Providing the **Content-Type** header as application/json.
+- The **Authorization header** that includes the **access token** obtained from the token endpoint.
+- The user details in the body of the request are being passed as JSON object:
+  - **username**: specify a unique username.
+  - **email**: specify a email.
+  - **firstName** : specify the first name.
+  - **lastName** : specify the last name.
+  - **enabled** : set to true.
+
+When you receive a _20X_ response, it will register/create a new user in keycloak, and return a response with the user's details.
+
+#### **Sign-Out**
+The process to sign out is related to the access token (as the login process). An Access Token is a data structure that has a lifetime encapsulated in it. So it is supposed to be valid until that time ends, so you cannot revoke an access token directly. Even though, you must set a short lifetime into the access token to avoid possible compromises. 
+
+#### **Log-Out**
+
+Making a POST request to the **logout endpoint** of Keycloak.
+
+```bash
+curl --location --request POST 'https://gravitate-health.lst.tfo.upm.es/realms/GravitateHealth/protocol/openid-connect/logout' \
+--header 'Authorization: Bearer $ACCESS_TOKEN' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=GravitateHealth' \
+--data-urlencode 'refresh_token= $REFRESH_TOKEN' \
+```
+
+This command does the following:
+
+- Providing the **Authorization header** that includes the access token of the user you want to log out.
+- Providing the **Content-Type** header as _application/x-www-form-urlencoded_.
+- The **client_id** is the id of the client that the user is logged in with.
+- **Refresh_token** is the refresh token of the user that you want to revoke.
+
+The result is that the access token and the refresh token will expire, and the user will be logged out.
+
+#### **Reset Credentials**
+_This request requires access to a service account, which allows applications to access a set of endpoints used to manage a user's account. This action will be performed upon explicit request to WP3 or to the system administrators._
+
+1. First of all, you need to obtain the id of the user you want to reset the credentials. Making a GET request to the **/users endpoint** of Keycloak.
+
+```bash
+curl --location --request GET 'https://gravitate-health.lst.tfo.upm.es/admin/realms/GravitateHealth/users?username={{username}}' \
+--header 'Authorization: Bearer $ACCESS_TOKEN' \
+```
+This command is doing the following:
+
+- Providing the **Authorization header** that includes the access token obtained from the token endpoint.
+- In the query param, the **username** is being passed, the email address can be passed as well. 
+
+When the command is executed, the response will be a list of all the users with that username, in the response, you can find the **id** of that user. You can also use other attributes like email, firstName, lastName to search a user and obtain the id.
+
+2. The second action is to reset the password. Making a PUT request to the **_/users/{id}/execute-actions-email_ endpoint** of Keycloak.
+   
+```bash
+curl --location --request PUT 'http://gravitate-health.lst.tfo.upm.es/admin/realms/GravitateHealth/users/{{user-id}}/execute-actions-email' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer $ACCESS_TOKEN' \
+```
+
+This command is doing the following:
+
+- Providing the **Content-Type** header as _application/json_.
+- The **Authorization header** that includes the access token obtained from the token endpoint.
+- The **_user-id_** in the url should be replaced with actual user-id
+
+When the command is executed, the server will initiate the password reset flow and send an email to the user with a link that they can use to reset their password. In this case the user is forced to reset the credentials.
+
+Besides, the credentials reset process can be performed by the Keycloak's automatic system which has been configured already with the _'Forget Password'_ bottom in the _Login Page_ as it can be seen in the image below. 
+
+![Keycloak Forget Your Passwrod?](./img/reset.png)
+
 Known issues and limitations
 ----------------------------
+
+There is no persistence to the APIs added at runtime, meaning that if the pod were to restart those changes will be lost. It also shouldn't be used with more than one replica if planning to add APIs at runtime, as the load balancer might redirect the requests to different pods.
+
 
 Getting help
 ------------
@@ -207,4 +352,5 @@ Acknowledgments
 - [Keycloak Documentation](https://www.keycloak.org/documentation)
 - [Keycloak Getting Started](https://www.keycloak.org/getting-started/getting-started-zip)
 - [Keycloak Server Administration Guide](https://www.keycloak.org/docs/latest/server_admin/)
+- [Keycloak Admin REST API v18.0](https://www.keycloak.org/docs-api/18.0/rest-api/index.html)
 
