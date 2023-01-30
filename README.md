@@ -311,7 +311,7 @@ Besides, the credentials reset process can be performed by the Keycloak's automa
 Known issues and limitations
 ----------------------------
 
-There is no persistence to the APIs added at runtime, meaning that if the pod were to restart those changes will be lost. It also shouldn't be used with more than one replica if planning to add APIs at runtime, as the load balancer might redirect the requests to different pods.
+There is no persistence to the APIs added at runtime, meaning that if the pod were to restart those changes will be lost.
 
 
 Getting help
