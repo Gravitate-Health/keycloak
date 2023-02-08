@@ -1,0 +1,366 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Gravitate Health Keycloak API Interface",
+    "version": "MVP2",
+    "description": "Gravitate Health authentication and user operations",
+    "contact": {}
+  },
+  "servers": [
+    {
+      "url": "https://gravitate-health.lst.tfo.upm.es"
+    }
+  ],
+  "paths": {
+    "/auth/api/auth": {
+      "post": {
+        "tags": [
+          "Login"
+        ],
+        "description": "Returns the access_token & refresh_token that will be used for the authorization",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Auth"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "token_type": "Bearer",
+                    "access_token": "ph28uqcrknpg36jbrsxgtmcsvjybgtuzcktketrd87d6649a7npx8b8vh7kej7u6bmyw3593xzkwfjfkycrsc9dy4p6aqt4yxwpqt5ssjmxauh6vx7tknjraecuvc438",
+                    "refresh_token": "p4mk9eemzznkwbpgsk6e3htnn92vbyq37kvz2kupuupm8b6f2g3ccwdjbffrg2av2xrezabmb7kd4s6dj8x7q7gj83465adge8fe4bgmhqe6nw9b3hyxtj765xgya44r"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login Failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "status ": {
+                      "type": "string"
+                    },
+                    "errors ": {
+                      "type": "object"
+                    }
+                  },
+                  "example": {
+                    "errors": {
+                      "status_code": 401
+                    },
+                    "message": "Wrong Email/Password combination",
+                    "status": "Unauthorized"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid Data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "errors ": {
+                      "type": "object"
+                    }
+                  },
+                  "example": {
+                    "errors": {
+                      "title": "The Title Field is required"
+                    },
+                    "message": "The given data was invalid."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/api/refresh": {
+      "post": {
+        "tags": [
+          "Refresh Token"
+        ],
+        "description": "Returns the access_token & refresh_token that will be used for the authorization",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshToken"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refresh Successfull",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "access_token": "ph28uqcrknpg36jbrsxgtmcsvjybgtuzcktketrd87d6649a7npx8b8vh7kej7u6bmyw3593xzkwfjfkycrsc9dy4p6aqt4yxwpqt5ssjmxauh6vx7tknjraecuvc438",
+                    "refresh_token": "p4mk9eemzznkwbpgsk6e3htnn92vbyq37kvz2kupuupm8b6f2g3ccwdjbffrg2av2xrezabmb7kd4s6dj8x7q7gj83465adge8fe4bgmhqe6nw9b3hyxtj765xgya44r"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login Failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "status ": {
+                      "type": "string"
+                    },
+                    "errors ": {
+                      "type": "object"
+                    }
+                  },
+                  "example": {
+                    "errors": {
+                      "status_code": 401
+                    },
+                    "message": "Unauthorized token",
+                    "status": "Unauthorized"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/api/reset-password": {
+      "post": {
+        "tags": [
+          "Reset Password"
+        ],
+        "description": "Reset user's password",
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation succesful"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/users/api/user": {
+      "post": {
+        "tags": [
+          "CRUD Users"
+        ],
+        "description": "Creates an user",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "409": {
+            "description": "Email already exists"
+          }
+        },
+        "requestBody": {
+          "description": "User metadata",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "patch": {
+        "tags": [
+          "CRUD Users"
+        ],
+        "description": "Updates an user",
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "409": {
+            "description": "Email already exists"
+          }
+        },
+        "requestBody": {
+          "description": "User metadata",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUser"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "CRUD Users"
+        ],
+        "description": "Deletes an user",
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "OAuth2": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "tokenUrl": "https://gravitate-health.lst.tfo.upm.es/auth/api/auth",
+            "refreshUrl": "https://gravitate-health.lst.tfo.upm.es/auth/api/refresh",
+            "scopes": {}
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Auth": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string",
+            "default": "GravitateHealth"
+          },
+          "grant_type": {
+            "type": "string",
+            "default": "password"
+          }
+        }
+      },
+      "RefreshToken": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "default": "GravitateHealth"
+          },
+          "grant_type": {
+            "type": "string",
+            "default": "password"
+          },
+          "refresh_token": {
+            "type": "string"
+          }
+        }
+      },
+      "User": {
+        "title": "User",
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateUser": {
+        "type": "object",
+        "title": "Update User",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
