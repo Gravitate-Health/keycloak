@@ -16,7 +16,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: keycloak
-  namespace: development
   labels:
     app: keycloak
   annotations:
@@ -60,12 +59,6 @@ spec:
           value: "edge"
         - name: KC_DB_URL
           value: "jdbc:postgresql://keycloak-postgres/keycloak"
-        #- name: KC_DB_URL_DATABASE
-        #  value: "keycloak"
-        #- name: KC_DB_URL_HOST
-        #  value: "keycloak-postgres"
-        #- name: KC_DB_URL_PORT
-        #  value: "5432"
         - name: KC_HOSTNAME_STRICT
           value: "false"
         - name: KC_HTTP_ENABLED
@@ -74,6 +67,8 @@ spec:
           value: "public"
         - name: KC_LOG_LEVEL
           value: debug
+        - name: KC_HTTP_RELATIVE_PATH
+          value: "/auth"
         ports:
         - name: http
           containerPort: 8080

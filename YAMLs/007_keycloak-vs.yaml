@@ -1,4 +1,4 @@
-# Copyright 2022 Universidad Politécnica de Madrid
+# Copyright 2023 Universidad Politécnica de Madrid
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: PersistentVolumeClaim
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
 metadata:
-  creationTimestamp: null
-  labels:
-    app: postgres-data
-  name: postgres-data
-  namespace: development
+  name: keycloak
 spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1000Mi
-status: {}
+  hosts:
+  - "*"
+  gateways:
+  - gh-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /auth
+    route:
+    - destination:
+        host: keycloak.default.svc.cluster.local
+        port:
+          number: 8080
