@@ -25,6 +25,8 @@ spec:
     - match:
         - uri:
             exact: /auth/api/auth
+        - uri:
+            exact: /auth/api/refresh
       rewrite:
         uri: "/auth/realms/GravitateHealth/protocol/openid-connect/token"
       route:
