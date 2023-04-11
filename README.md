@@ -12,6 +12,7 @@ Table of contents
   - [Installation](#installation)
     - [Requirements](#requirements)
     - [Local deployment](#local-deployment)
+    - [PostgreSQL Helm Deployment](#postgresql-helm-deployment)
     - [Kubernetes deployment](#kubernetes-deployment)
   - [Usage](#usage)
     - [Example operation](#example-operation)
@@ -55,6 +56,70 @@ A **Realm** is an object that manage a set of of users, credentials, roles, and 
 
 ![Keycloak](./img/welcome.png)
 
+### PostgreSQL Helm Deployment
+
+Postgres is installed via [Bitnami's Helm chart](https://github.com/bitnami/charts/tree/main/bitnami/postgresql/).
+
+1. Create PVC and apply it:
+
+```bash
+kubectl apply -f YAMLs/002_postgres_pvc.yaml
+```
+
+
+2. Create a `values.yaml` file to override default values. The secret values will be creates as a kubernetes secret.
+
+```yaml
+# define default database user, name, and password for PostgreSQL deployment
+auth:
+  enablePostgresUser: true
+  postgresPassword: "ADMIN_STRONG_PASSWORD"
+  username: "keycloak"
+  password: "KEYCLOAK_DATABASE_PASSWORD" #This password will be used by keycloak
+  database: "keycloak"
+
+# The postgres helm chart deployment will be using PVC postgres-data-keycloak
+primary:
+  persistence:
+    enabled: true
+    existingClaim: "postgres-data-keycloak" # This is the previously created PVC
+```
+
+3. Add Helm repo and install the chart:
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm install keycloak-helm -f YAMLs/values.yaml bitnami/postgresql
+```
+
+ANd check everything is installed correctly:
+
+```bash
+kubectl get secrets
+```
+```bash
+NAME                                            TYPE                             DATA   AGE
+keycloak-pgql-postgresql                        Opaque                           2      1m25s
+```
+
+```bash
+kubectl get pods
+```
+```bash
+NAME                                    READY   STATUS    RESTARTS   AGE
+keycloak-pgql-postgresql-0              2/2     Running   0          2m
+```
+
+```bash
+kubectl get services
+```
+```bash
+NAME                                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+
+keycloak-pgql-postgresql                ClusterIP   10.233.1.115    <none>        5432/TCP            2m43s
+keycloak-pgql-postgresql-hl             ClusterIP   None            <none>        5432/TCP            2m43s
+```
+
 ### Kubernetes deployment
 
 The Kubernetes deployment uses the public Keycloak image hosted at [quay.io](https://quay.io/repository/keycloak/keycloak). And the public Postgresql image hosted at [hub.docker](https://hub.docker.com/_/postgres), which will be used as persistence. The files for the deployment can be found at the [YAMLs](YAMLs/) directory
@@ -64,15 +129,6 @@ Both the deployment files for the Postgres DB and the Keycloak contain several e
 ```bash
 echo -n Mypassword1234! | base64 -w 0     # Make sure there is no trailing "\n", it will fail
 ```
-
-- Postgres environment variables
-
-| Environment Variable | description                                   | default                         |
-|----------------------|-----------------------------------------------|---------------------------------|
-| POSTGRES_DB          | Database name to be created on initialization | keycloak                        |
-| POSGRES_PASSWORD     | Database password                             | \<secret>                       |
-| POSTGRES_USER        | Database user                                 | keycloak                        |
-| PGDATA               | Data location                                 | /var/lib/postgresql/data/pgdata |
 
 - Keycloak environment variables
 
@@ -98,22 +154,9 @@ kubectl create namespace <namespace>                         # Only if namespace
 kubectl config set-context --current --namespace=<namespace> # Only if namespace not created and/or the current context
 
 kubectl apply -f YAMLs/001_keycloak-secrets.yaml
-kubectl apply -f YAMLs/002_postgres_pvc.yaml
-kubectl apply -f YAMLs/003_postgres_service.yaml
-kubectl apply -f YAMLs/004_postgres_deployment.yaml
 ```
 
-Once the database is ready the Keycloak can be deployed, you can check if the database is ready by running:
-
-```bash
-kubectl get pod | grep "keycloak-postgres"
-```
-```bash
-NAMESPACE            NAME                                         READY   STATUS    RESTARTS        AGE
-<namespace>          keycloak-postgres-6cc76fc8dc-fbtqv           1/1     Running   0               10d
-```
-
-If the status is running proceed with the Keycloak deployment:
+Once the database is ready the Keycloak can be deployed:
 
 ```bash
 kubectl apply -f YAMLs/005_keycloak-service.yaml
