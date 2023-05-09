@@ -99,7 +99,7 @@ kubectl get secrets
 ```
 ```bash
 NAME                                            TYPE                             DATA   AGE
-keycloak-pgql-postgresql                        Opaque                           2      1m25s
+keycloak-helm-postgresql                        Opaque                           2      1m25s
 ```
 
 ```bash
@@ -107,7 +107,7 @@ kubectl get pods
 ```
 ```bash
 NAME                                    READY   STATUS    RESTARTS   AGE
-keycloak-pgql-postgresql-0              2/2     Running   0          2m
+keycloak-helm-postgresql-0              2/2     Running   0          2m
 ```
 
 ```bash
@@ -116,8 +116,8 @@ kubectl get services
 ```bash
 NAME                                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
 
-keycloak-pgql-postgresql                ClusterIP   10.233.1.115    <none>        5432/TCP            2m43s
-keycloak-pgql-postgresql-hl             ClusterIP   None            <none>        5432/TCP            2m43s
+keycloak-helm-postgresql                ClusterIP   10.233.1.115    <none>        5432/TCP            2m43s
+keycloak-helm-postgresql-hl             ClusterIP   None            <none>        5432/TCP            2m43s
 ```
 
 ### Kubernetes deployment

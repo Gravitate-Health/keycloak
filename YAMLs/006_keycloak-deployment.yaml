@@ -51,14 +51,14 @@ spec:
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: keycloak-pgql-postgresql
+              name: keycloak-helm-postgresql
               key: password
         - name: KC_DB_USERNAME
           value: "keycloak"
         - name: KC_PROXY
           value: "edge"
         - name: KC_DB_URL
-          value: "jdbc:postgresql://keycloak-pgql-postgresql/keycloak"
+          value: "jdbc:postgresql://keycloak-helm-postgresql/keycloak"
         - name: KC_HOSTNAME_STRICT
           value: "false"
         - name: KC_HTTP_ENABLED
