@@ -33,6 +33,24 @@ paths:
                   token_type: Bearer
                   access_token: ph28uqcrknpg36jbrsxgtmcsvjybgtuzcktketrd87d6649a7npx8b8vh7kej7u6bmyw3593xzkwfjfkycrsc9dy4p6aqt4yxwpqt5ssjmxauh6vx7tknjraecuvc438
                   refresh_token: p4mk9eemzznkwbpgsk6e3htnn92vbyq37kvz2kupuupm8b6f2g3ccwdjbffrg2av2xrezabmb7kd4s6dj8x7q7gj83465adge8fe4bgmhqe6nw9b3hyxtj765xgya44r
+        '400':
+          description: Account is not set up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  'status ':
+                    type: string
+                  'errors ':
+                    type: object
+                example:
+                  errors:
+                    status_code: 400
+                  message: User needs to confirm email
+                  status: Unauthorized
         '401':
           description: Login Failed
           content:
