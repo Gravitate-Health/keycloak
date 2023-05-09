@@ -55,6 +55,10 @@ spec:
               key: password
         - name: KC_DB_USERNAME
           value: "keycloak"
+        - name: KEYCLOAK_FRONTEND_URL
+          value: "https://fosps.gravitatehealth.eu/auth/"
+        - name: KEYCLOAK_ADMIN_URL
+          value: "https://fosps.gravitatehealth.eu/auth/realms/master/admin/"
         - name: KC_PROXY
           value: "edge"
         - name: KC_DB_URL
