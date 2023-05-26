@@ -33,14 +33,17 @@ spec:
       containers:
       - name: keycloak
         image: quay.io/keycloak/keycloak:18.0.0
+        resources: {}
         command: ["/bin/sh", "-c"]
         args:
           - echo starting;
             printenv;
             /opt/keycloak/bin/kc.sh build --db postgres;
             /opt/keycloak/bin/kc.sh show-config; 
-            /opt/keycloak/bin/kc.sh -v start --db-url-host=keycloak-postgres:5432 --db-url-database=keycloak --db-username=${KC_DB_USERNAME} --db-password=${KC_DB_PASSWORD};
+            /opt/keycloak/bin/kc.sh -v start --db-url-database=keycloak --db-url-host=${KC_DB_URL} --db-username=${KC_DB_USERNAME} --db-password=${KC_DB_PASSWORD};
+            #
         env:
+        # Admin Configuration
         - name: KEYCLOAK_ADMIN
           value: "admin"
         - name: KEYCLOAK_ADMIN_PASSWORD
@@ -48,6 +51,7 @@ spec:
             secretKeyRef:
               name: keycloak-secret
               key: adminpass
+        # Database Configuration
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -55,24 +59,63 @@ spec:
               key: password
         - name: KC_DB_USERNAME
           value: "keycloak"
-        - name: KEYCLOAK_FRONTEND_URL
-          value: "https://fosps.gravitatehealth.eu/auth/"
-        - name: KEYCLOAK_ADMIN_URL
-          value: "https://fosps.gravitatehealth.eu/auth/realms/master/admin/"
-        - name: KC_PROXY
-          value: "edge"
         - name: KC_DB_URL
           value: "jdbc:postgresql://keycloak-helm-postgresql/keycloak"
-        - name: KC_HOSTNAME_STRICT
-          value: "false"
-        - name: KC_HTTP_ENABLED
-          value: "true"
         - name: KC_DB_SCHEMA
           value: "public"
-#        - name: KC_LOG_LEVEL
-#          value: debug
+        # Hostname and reverse proxy configuration
         - name: KC_HTTP_RELATIVE_PATH
           value: "/auth"
+        - name: KC_FRONTEND_URL
+          value: "https://fosps.gravitatehealth.eu/auth"
+        - name: KC_HOSTNAME
+          value: "fosps.gravitatehealth.eu"
+        - name: KC_HOSTNAME_STRICT
+          value: "false"
+        # Other configuration
+        - name: KC_PROXY
+          value: "edge"
+        - name: KC_HTTP_ENABLED
+          value: "true"
+#        - name: KC_LOG_LEVEL
+#          value: debug
+####        - name: KC_DB_USERNAME
+####          value: "keycloak"
+####        - name: KC_DB_SCHEMA
+####          value: "public"
+####        - name: KC_DB_URL
+####          value: "jdbc:postgresql://keycloak-helm-postgresql/keycloak"
+####        # URL Configuration
+####        - name: KC_HTTP_RELATIVE_PATH
+####          value: "/auth"
+####        #- name: KEYCLOAK_FRONTEND_URL
+####        #  value: "https://fosps.gravitatehealth.eu/auth"
+####        - name: KC_ADMIN_URL
+####          value: "https://fosps.gravitatehealth.eu/auth/realms/master/admin/"
+####        - name: "KC_PROXY_ADDRESS_FORWARDING"
+####          value: "true"
+####        #- name: KC_FEATURES_DISABLED
+####        #  value: admin2
+####        #- name: KC_FRONTEND_URL
+####        #  value: "fosps.gravitatehealth.eu/auth"
+####        #- name: KC_PROXY
+####        #  value: "edge"
+####        - name: KC_HOSTNAME_STRICT
+####          value: "true"
+#        - name: KC_HOSTNAME
+#          value: "fosps.gravitatehealth.eu/auth"
+####        - name: KC_HOSTNAME_ADMIN
+####          value: "fosps.gravitatehealth.eu/auth"
+####        #- name: KEYCLOAK_HOSTNAME
+####          #value: "fosps.gravitatehealth.eu"
+####        #- name: KC_HOSTNAME_URL
+####        #  value: "fosps.gravitatehealth.eu/auth/"
+####        #- name: KC_HOSTNAME_ADMIN_URL
+####        #  value: "fosps.gravitatehealth.eu/auth/realms/master/admin/"
+####        - name: KC_HTTP_ENABLED
+####          value: "true"
+####        #- name: KC_LOG_LEVEL
+####        #  value: debug
         ports:
         - name: http
           containerPort: 8080
