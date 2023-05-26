@@ -11,7 +11,7 @@ paths:
     post:
       tags:
         - Login
-      description: Returns the access_token & refresh_token that will be used for the authorization
+      description: Returns the access_token & refresh_token that will be used for the authorization. client_id defaults to "GravitateHealth" and grant_type for that client is "password".
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -42,15 +42,15 @@ paths:
                 properties:
                   message:
                     type: string
-                  'status ':
+                  status:
                     type: string
-                  'errors ':
+                  errors:
                     type: object
                 example:
                   errors:
                     status_code: 400
-                  message: User needs to confirm email
-                  status: Unauthorized
+                  message: User needs to verify email
+                  status: Bad request
         '401':
           description: Login Failed
           content:
@@ -182,7 +182,23 @@ paths:
         '201':
           description: Created
         '400':
-          description: Bad request
+          description: Bad request due to invalid body, or password not meeting minimum requirements.
+          content: 
+            application/json:
+              schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                    status:
+                      type: string
+                    errors:
+                      type: object
+                  example:
+                    errors:
+                      status_code: 400
+                    message: Password does not meet security policy. At least 8 characters, with 1 uppercase, 1 lowercase and 1 digit.
+                    status: Bad request
         '409':
           description: Email already exists
       requestBody:
@@ -263,7 +279,7 @@ components:
           default: GravitateHealth
         grant_type:
           type: string
-          default: password
+          default: refresh_token
         refresh_token:
           type: string
     CreateUser:
