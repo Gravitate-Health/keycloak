@@ -36,6 +36,26 @@ spec:
               number: 8080
     - match:
         - uri:
+            exact: /auth/api/revoke
+      rewrite:
+        uri: "/auth/realms/GravitateHealth/protocol/openid-connect/revoke"
+      route:
+        - destination:
+            host: keycloak.default.svc.cluster.local
+            port:
+              number: 8080
+    - match:
+        - uri:
+            exact: /auth/api/userinfo
+      rewrite:
+        uri: "/auth/realms/GravitateHealth/protocol/openid-connect/userinfo"
+      route:
+        - destination:
+            host: keycloak.default.svc.cluster.local
+            port:
+              number: 8080
+    - match:
+        - uri:
             prefix: /auth
       route:
         - destination:
