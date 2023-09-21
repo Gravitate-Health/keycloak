@@ -127,6 +127,27 @@ paths:
                     status_code: 401
                   message: Unauthorized token
                   status: Unauthorized
+  /auth/api/revoke:
+    post:
+      tags:
+        - Revoke Token
+      description: Revokes the access_token. Include JWT in the Authorization header.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RevokeToken'
+      responses:
+        '200':
+          description: OK
+  /auth/api/userinfo:
+    post:
+      tags:
+        - User Info
+      description: Inspect token to get User info.
+      responses:
+        '204':
+          description: No content
   /users/api/reset-password:
     post:
       tags:
@@ -281,6 +302,14 @@ components:
           type: string
           default: refresh_token
         refresh_token:
+          type: string
+    RevokeToken:
+      type: object
+      properties:
+        client_id:
+          type: string
+          default: GravitateHealth
+        token:
           type: string
     CreateUser:
       title: CreateUser
