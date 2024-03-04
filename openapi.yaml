@@ -6,6 +6,7 @@ info:
   contact: {}
 servers:
   - url: https://fosps.gravitatehealth.eu
+  - url: https://gravitate-health.lst.tfo.upm.es
 paths:
   /auth/api/auth:
     post:
