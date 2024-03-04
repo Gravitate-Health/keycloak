@@ -184,7 +184,7 @@ paths:
         - CRUD Users
       description: Gets an user
       security:
-        - OAuth2: []
+        - BearerAuth: []
       responses:
         '200':
           description: OK
@@ -243,7 +243,7 @@ paths:
         - CRUD Users
       description: Updates an user
       security:
-        - OAuth2: []
+        - BearerAuth: []
       responses:
         '204':
           description: No content
@@ -263,7 +263,7 @@ paths:
         - CRUD Users
       description: Deletes an user
       security:
-        - OAuth2: []
+        - BearerAuth: []
       responses:
         '200':
           description: Delete
@@ -278,6 +278,12 @@ components:
           tokenUrl: https://fosps.gravitatehealth.eu/auth/api/auth
           refreshUrl: https://fosps.gravitatehealth.eu/auth/api/refresh
           scopes: {}
+    OpenID:
+      type: openIdConnect
+      openIdConnectUrl: https://gravitate-health.lst.tfo.upm.es/auth/realms/GravitateHealth/.well-known/openid-configuration
+    BearerAuth:
+      type: http
+      scheme: bearer
   schemas:
     Auth:
       type: object
