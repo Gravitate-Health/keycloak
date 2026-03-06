@@ -36,6 +36,30 @@ Installation
 
 Refer to the [General FOSPS Deployment Documentation](https://github.com/Gravitate-Health/Documentation) to deploy this service.
 
+### Deploy via Helm (OCI)
+
+You can deploy this service using the Helm chart directly from the GitHub Container Registry.
+
+```bash
+# Login to registry (if private)
+helm registry login ghcr.io
+
+# Deploy directly from the registry
+helm install keycloak oci://ghcr.io/gravitate-health/charts/keycloak --version 0.1.0 \
+  --set config.adminPassword=your-secure-password
+```
+
+### Local Development
+
+For local development or customization of the Helm chart:
+
+```bash
+# Lint the chart for any issues
+helm lint charts/keycloak
+
+# Template the chart to see the generated manifests
+helm template my-release charts/keycloak --values charts/keycloak/values.yaml
+```
 
 Usage
 -----

@@ -1,0 +1,54 @@
+{{- if eq .Values.networking.type "istio" }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ include "keycloak.fullname" . }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+spec:
+  hosts:
+    {{- toYaml .Values.networking.istio.hosts | nindent 4 }}
+  gateways:
+    {{- toYaml .Values.networking.istio.gateways | nindent 4 }}
+  http:
+    - match:
+        - uri:
+            exact: /auth/api/auth
+        - uri:
+            exact: /auth/api/refresh
+      rewrite:
+        uri: "/auth/realms/GravitateHealth/protocol/openid-connect/token"
+      route:
+        - destination:
+            host: {{ include "keycloak.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: {{ .Values.service.port }}
+    - match:
+        - uri:
+            exact: /auth/api/revoke
+      rewrite:
+        uri: "/auth/realms/GravitateHealth/protocol/openid-connect/revoke"
+      route:
+        - destination:
+            host: {{ include "keycloak.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: {{ .Values.service.port }}
+    - match:
+        - uri:
+            exact: /auth/api/userinfo
+      rewrite:
+        uri: "/auth/realms/GravitateHealth/protocol/openid-connect/userinfo"
+      route:
+        - destination:
+            host: {{ include "keycloak.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: {{ .Values.service.port }}
+    - match:
+        - uri:
+            prefix: /auth
+      route:
+        - destination:
+            host: {{ include "keycloak.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: {{ .Values.service.port }}
+{{- end }}

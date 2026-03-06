@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keycloak.fullname" . }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+  {{- with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "keycloak.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "keycloak.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo starting;
+            printenv;
+            /opt/keycloak/bin/kc.sh build --db postgres;
+            /opt/keycloak/bin/kc.sh show-config; 
+            /opt/keycloak/bin/kc.sh -v start --db-url-database={{ .Values.config.dbName }} --db-url-host=${KC_DB_URL} --db-username=${KC_DB_USERNAME} --db-password=${KC_DB_PASSWORD};
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: {{ .Values.config.adminUser | quote }}
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "keycloak.fullname" . }}-secrets
+              key: admin-password
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.config.dbSecretName }}
+              key: {{ .Values.config.dbSecretKey }}
+        - name: KC_DB_USERNAME
+          value: {{ .Values.config.dbUsername | quote }}
+        - name: KC_DB_URL
+          value: {{ .Values.config.dbUrl | quote }}
+        - name: KC_DB_SCHEMA
+          value: {{ .Values.config.dbSchema | quote }}
+        - name: KC_HTTP_RELATIVE_PATH
+          value: {{ .Values.config.httpRelativePath | quote }}
+        - name: KC_FRONTEND_URL
+          value: {{ .Values.config.frontendUrl | quote }}
+        - name: KC_HOSTNAME
+          value: {{ .Values.config.hostname | quote }}
+        - name: KC_HOSTNAME_STRICT
+          value: {{ .Values.config.hostnameStrict | quote }}
+        - name: KC_PROXY
+          value: {{ .Values.config.proxy | quote }}
+        - name: KC_HTTP_ENABLED
+          value: {{ .Values.config.httpEnabled | quote }}
+        {{- if .Values.extraEnv }}
+        {{- toYaml .Values.extraEnv | nindent 8 }}
+        {{- end }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
